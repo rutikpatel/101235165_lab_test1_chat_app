@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Lab Test 1 - Chat</title>
+</head>
+
+<body>
+    <h1>Chat</h1>
+    <div id='error-container'></div>
+    <br />
+
+    <label for="rooms">Choose a room:</label>
+    <select name="rooms" id="rooms">
+        <option value='news'>news</option>
+        <option value='covid19'>covid19</option>
+        <option value='nodeJS'>nodeJS</option>
+    </select>
+    <button onclick='joinRoom()'>Join Room</button>
+
+    <h1 id='roomName'></h1>
+    <br />
+        <div id='chatRoom'>
+        <input id='roomMessage' type='text' name='roomMessage' value="" placeholder="Enter message to room">
+        <button onClick='sendMessage()'>Send message</button>
+        </div> 
+    <div id="message-container"></div>
+</body>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    // handle cookies
+    userName = localStorage.getItem('userName')
+    if (userName == '') {
+        console.log('user not logged in')
+        window.location.replace("http://localhost:3001/")
+    }
+
+    const client = io()
+    // Socket IO 
+    // welcome message
+    client.on('welcome', (message) => {
+        addMessage(message)
+    })
+
+    // message from other clients
+    client.on('newMessage', (message) => {
+        addMessage(message)
+    })
+
+    // functions 
+    // send message, to room
+    function sendMessage() {
+        message = document.getElementById('roomMessage').value
+        var roomName = document.getElementById('roomName').innerHTML
+        userName = localStorage.getItem('userName')
+        messageSend = {
+            room: roomName,
+            message: message,
+            userName: userName
+        }
+        client.emit('messageToRoom', messageSend)
+        addMessage(messageSend)
+    }
+
+    // add message to display
+    function addMessage(message) {
+        document.getElementById('message-container').innerHTML += `<div> ${message.userName}: ${message.message} </div>`
+    }
+
+    function joinRoom() {
+            x.style.display = "none";
+            let roomNameH1 = document.getElementById('roomName')
+            let roomNameTag = document.getElementById('rooms')
+            let roomName = roomNameTag.options[roomNameTag.selectedIndex].value
+            roomNameH1.innerHTML = roomName
+            userName = localStorage.getItem('userName')
+            client.emit('join', roomName, userName)   
+    }
+
+    function getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+
+</script>
+
+</html>
+
+

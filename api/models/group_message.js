@@ -1,15 +1,15 @@
 const mongoose = require('mongoose')
 
 const GroupMessage = new mongoose.Schema({
-    from_user: {
+    fromUser: {
         type: String,
         required: [true, "Please enter username"],
         trim: true,
         lowercase: true,
     },
-    to_user: {
+    room: {
         type: String,
-        required: [true, "Please enter username"],
+        required: [true, "Please enter room name"],
         trim: true,
         lowercase: true,
     },
@@ -18,7 +18,7 @@ const GroupMessage = new mongoose.Schema({
         required: true,
         trim: true,
     },
-    date_sent: {
+    dateSent: {
         type: Date,
         default: Date.now,
     }
