@@ -23,6 +23,78 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true
 }));
 
+// socket io stuff
+// client requests
+io.on('connection', (socket) => {
+    
+    // join room
+    socket.on('join', (roomName, userName) => {
+        console.log('connection created...', socket.id)
+        const _id = socket.id
+        // welcome message
+        const welcomeMessage = {
+            userName: 'admin',
+            message: 'Welcome to the chat application'
+        }
+        socket.emit('welcome', welcomeMessage,_id)
+        socket.join(roomName)
+        socket.broadcast.to(roomName).emit('userJoined', userName)
+    })
+    socket.on('left', (roomName, userName) => {
+        socket.broadcast.to(roomName).emit('userHasLeft', userName)
+    })
+
+    // send message to room
+    socket.on('messageToRoom', async (data) => {
+        const message = {
+            userName: data.userName,
+            message: data.message
+        }
+        socket.broadcast.to(data.room).emit('newMessage', message)
+
+        console.log(`${data.userName} send a message to ${data.room}`)
+        try {
+            const newMsg = GroupMessage({
+                fromUser: data.userName,
+                room: data.room,
+                message: data.message
+            })
+            await newMsg.save()
+        }
+        catch (e) {
+            throw new Error(e.message)
+        }
+        // socket.broadcast.to(data.room).emit('newMessage', message)
+    })
+    socket.on('privateMessage', async (data) => {
+        const message = {
+            fromUser:data.fromUser,
+            toUser: data.toUser,
+            message: data.message
+        }
+        // socket.broadcast.to(data.room).emit('newMessage', message)
+
+        console.log(`${data.fromUser} send a message to ${data.toUser}`)
+        try {
+            const newMsg = PrivateMessage({
+                fromUser: data.fromUser,
+                toUser: data.toUser,
+                message: data.message
+            })
+            await newMsg.save()
+        }
+        catch (e) {
+            throw new Error(e.message)
+        }
+        // socket.broadcast.to(data.room).emit('newMessage', message)
+    })
+
+    // disconnect
+    socket.on('disconnect', () => {
+        console.log(`${socket.id} disconnected...`)
+    })
+
+})
 // default, login page
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/login.html')
@@ -65,10 +137,18 @@ app.post('/register', async(req, res) => {
         res.status(400).send({ error: e.message });
     }
     
-})
-;
+});
 app.get('/chat', (req, res) => {
     res.sendFile(__dirname + '/chat.html')
+})
+app.post('/chat', async (req, res) => {
+    try {
+        const result = await User.find({}).select('userName')
+        res.status(200).send(result)
+    }
+    catch (e) {
+        res.status(400).send({ error: e.message });
+    }
 })
 app.get('/chatroom', (req, res) => {
     res.sendFile(__dirname + '/chatRoom.html')
@@ -86,69 +166,16 @@ app.post('/chatroom', async(req, res) => {
 app.get('/privateRoom', (req, res) => {
     res.sendFile(__dirname + '/privateRoom.html')
 })
-
-app.post('/chat', async(req, res) => {
+app.post('/privateRoom', async(req, res) => {
     try {
-        const result = await User.find({}).select('userName')
-        res.status(200).send( result )
+        const { toUser } = req.body
+        const result = await PrivateMessage.find({ toUser: toUser  })
+        res.status(200).send(result)
     }
     catch (e) {
         res.status(400).send({ error: e.message });
     }
 })
-
-// socket io stuff
-// client requests
-io.on('connection', (socket) => {
-    console.log('connection created...')
-
-    // welcome message
-    const welcomeMessage = {
-        userName: 'admin',
-        message: 'Welcome to the chat application'
-    }
-    socket.emit('welcome', welcomeMessage)
-
-    // join room
-    socket.on('join', (roomName,userName) => {
-        socket.join(roomName)
-        socket.broadcast.to(roomName).emit('userJoined',userName)
-    })
-    socket.on('left', (roomName, userName) => {
-        socket.broadcast.to(roomName).emit('userHasLeft', userName)
-    })
-
-
-    // send message to room
-    socket.on('messageToRoom', async (data) => {
-        const message = {
-            userName: data.userName,
-            message: data.message
-        }
-        socket.broadcast.to(data.room).emit('newMessage', message)
-
-        console.log(`${data.userName} send a message to ${data.room}`)
-        try{
-        const newMsg = GroupMessage({
-            fromUser: data.userName,
-            room: data.room,
-            message:data.message
-        })
-        await newMsg.save()
-        }   
-        catch(e){
-            throw new Error(e.message)
-        }
-        // socket.broadcast.to(data.room).emit('newMessage', message)
-    })
-
-    // disconnect
-    socket.on('disconnect', () => {
-        console.log(`${socket.id} disconnected...`)
-    })
-
-})
-
 
 const dbURL = "mongodb://localhost:27017/labtest"
 

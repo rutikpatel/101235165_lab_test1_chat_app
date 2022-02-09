@@ -135,12 +135,13 @@
         const client = io()
         // Socket IO 
         // welcome message
-        client.on('welcome', (message) => {
+        client.on('welcome', (message,_id) => {
             addMessage(message)
+            localStorage.setItem('id', _id)
         })
         
         client.emit('join', roomName, userName)  
-
+        
         // message from other clients
         client.on('newMessage', (message) => {
             addMessage(message)
@@ -150,6 +151,7 @@
                 message: `Joined this group`,
                 userName
             }
+            
             addMessage(newRoomMessage)
         })
         client.on('userHasLeft', (userName) => {
@@ -161,7 +163,7 @@
             })
         function leaveRoom() {
                 client.emit('left', roomName, userName)
-                window.location.href = "/chat";
+                window.location.replace("/chat");
             }
 
         // functions 
@@ -187,24 +189,24 @@
             document.getElementById('message-container').innerHTML += `<p> ${message.userName}: ${message.message} </p>`
         }
         fetch(
-                "http://localhost:3001/chatroom", {
-                method: "POST",
-                cache: 'no-cache',
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    roomName
-                })
-            }
-            )
-                .then(res => res.json())
-                .then(res => {
-                    var result = res
-                   for(let i=0;i<result.length;i++){
-                        document.getElementById("history").innerHTML +=
-                             result[i].fromUser + " :" + result[i].message + "<br>" 
-                   }
-                })
-                .catch(err => alert(err))
+            "http://localhost:3001/chatroom", {
+            method: "POST",
+            cache: 'no-cache',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                roomName
+            })
+        }
+        )
+            .then(res => res.json())
+            .then(res => {
+                var result = res
+                for(let i=0;i<result.length;i++){
+                    document.getElementById("history").innerHTML +=
+                            `<li> ${result[i].fromUser} : ${result[i].message}</li>` 
+                }
+            })
+            .catch(err => alert(err))
     </script>
 
 </body>

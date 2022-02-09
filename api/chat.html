@@ -95,9 +95,11 @@
 </head>
 
 <body>
+        <div class="mt-4 name">
+            <h2><a href="#" onclick="logout()">Logout</a></h2>
+        </div>
     <div class="wrapper">
-        <div class="mt-4 name"><h2>Chat-Rooms</h2></div>
-            <a href="#" onclick="logout()">Logout</a>
+        <div class="mt-4 name"><h2>Chat-Rooms</h2></div>    
         <br />
         <label for="rooms">Choose a room:</label>
         <select name="rooms" id="rooms">
@@ -115,9 +117,15 @@
         <label for="rooms">Choose a user:</label>
 
         <select name="userList" id="userList">
-            <option value='users' id="list">Select user</option>
+            <option value='' id="list">Select user</option>
         </select>
         <button onclick='sendPrivateMsg()'>Send Message</button>
+    </div>
+    <div class="wrapper form-field d-flex align-items-center">
+        <div class="mt-4 name">
+            <h1>Inbox</h1>
+        </div>
+        <p id="inbox"></p>
     </div>
 </body>
 
@@ -140,7 +148,12 @@
     function sendPrivateMsg(){
         let userNameTag = document.getElementById('userList')
         let toUserName = userNameTag.options[userNameTag.selectedIndex].value
-        window.location.href = `http://localhost:3001/privateRoom?toUserName=${toUserName}`
+        if(toUserName == null || toUserName === "" || toUserName === undefined){
+            alert("Please select the user first")
+        }
+        else{
+            window.location.href = `http://localhost:3001/privateRoom?toUserName=${toUserName}`
+        }
     }
 
     function logout() {
@@ -156,26 +169,49 @@
             
         }
         )
-            .then(res => res.json())
-            .then(res => {
-                var userLists = [(res)]
-                // userLists.pop(userName)
-                console.log(userLists)
-                    userLists.map((element) => {
-                        for (var i = 0; i < element.length; i++) {
-                            if(element[i].userName===userName){
-                                continue
-                            }
-                            var select = document.getElementById("userList");
-                            var option = document.createElement("option");
-                            option.text = element[i].userName;
-                            option.value = element[i].userName;
-                            select.add(option);
+        .then(res => res.json())
+        .then(res => {
+            var userLists = [(res)]
+            console.log(userLists)
+                userLists.map((element) => {
+                    for (var i = 0; i < element.length; i++) {
+                        if(element[i].userName===userName){
+                            continue
                         }
-                    })
+                        var select = document.getElementById("userList");
+                        var option = document.createElement("option");
+                        option.text = element[i].userName;
+                        option.value = element[i].userName;
+                        select.add(option);
+                    }
+                })
 
             })
             .catch(err => alert(err))
+            const toUser = userName
+            fetch(
+                
+                    "http://localhost:3001/privateRoom", {
+                    method: "POST",
+                    cache: 'no-cache',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        toUser
+                    })
+                }
+                )
+                    .then(res => res.json())
+                    .then(res => {
+                        var result = res
+                        for (let i = 0; i < result.length; i++) {
+                            document.getElementById("inbox").innerHTML +=
+                                `<ul> Message from ${result[i].fromUser}: ${result[i].message} <ul>`
+                        }
+                        // window.location.href = `http://localhost:3001/privateRoom?toUserName=${toUser}`
+
+                    })
+                    .catch(err => alert(err))
+
         // }
 
 </script>

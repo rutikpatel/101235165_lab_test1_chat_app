@@ -98,16 +98,19 @@
 </head>
 
 <body>
+    <div class="mt-4 name">
+        <h2><a href="#" onclick="goBack()">Go back</a></h2>
+    </div>
     <div class="wrapper">
         <div class="mt-4 name">
             <h1>Private message to:</h1>
             <h3 id='toUserName'></h3>
         </div>
-        <a href="#" onclick="leaveRoom()">Left the room</a>
+        
 
         <br />
         <div class="form-field d-flex align-items-center" id='chatRoom'>
-            <input id='roomMessage' type='text' name='roomMessage' value="" placeholder="Enter message to room"
+            <input id='privateMessage' type='text' name='privateMessage' value="" placeholder="Enter message to room"
                 required>
             <button class="btn mt-3" type="submit" onClick='sendMessage()'>Send message</button>
         </div>
@@ -121,68 +124,46 @@
             console.log('user not logged in')
             window.location.href = "http://localhost:3001/"
         }
-        const userName = loggedInUser.userName
+        const client = io()
+        const fromUser = loggedInUser.userName
         const queryString = window.location.search;
         console.log(queryString)
         const urlParams = new URLSearchParams(queryString);
-        const toUserName = urlParams.get('toUserName')
-        
-        document.getElementById('toUserName').innerHTML = toUserName
+        const toUser = urlParams.get('toUserName')
+        document.getElementById('toUserName').innerHTML = toUser
 
-        // const client = io()
-        // // Socket IO 
-        // // welcome message
-        // client.on('welcome', (message) => {
-        //     addMessage(message)
-        // })
-
-        // client.emit('join', roomName, userName)
-
-        // // message from other clients
-        // client.on('newMessage', (message) => {
-        //     addMessage(message)
-        // })
-        // client.on('userJoined', (userName) => {
-        //     const newRoomMessage = {
-        //         message: `Joined this group`,
-        //         userName
-        //     }
-        //     addMessage(newRoomMessage)
-        // })
-        // client.on('userHasLeft', (userName) => {
-        //     const newRoomMessage = {
-        //         message: `left this group`,
-        //         userName
-        //     }
-        //     addMessage(newRoomMessage)
-        // })
-        function leaveRoom() {
-            client.emit('left', roomName, userName)
+        function goBack() {
             window.location.href = "/chat";
         }
 
         // functions 
-        // send message, to room
+        // send message, to private user
         function sendMessage() {
-            message = document.getElementById('roomMessage').value
+            message = document.getElementById('privateMessage').value
             if (message.length === 0 || message === "" || message === undefined) {
                 alert("Please enter the message first")
             }
             else {
                 messageSend = {
-                    room: roomName,
+                    toUser: toUser,
                     message: message,
-                    userName: userName
+                    fromUser: fromUser
                 }
-                client.emit('messageToRoom', messageSend)
-                addMessage(messageSend)
+                client.emit('privateMessage', messageSend)
+                privateMessage(messageSend)
+                // window.location.href = `http://localhost:3001/privateRoom?toUserName=${toUser}`
+
             }
+        }
+        function privateMessage(message){
+        document.getElementById('message-container').innerHTML += `<li> Messege : "<b>${ message.message }</b>" sent sunccessfully to : "<b>${message.toUser}</b>" <br/>`
+
         }
         // add message to display
         function addMessage(message) {
             document.getElementById('message-container').innerHTML += `<li> ${message.userName}: ${message.message} </li>`
         }
-
+        
     </script>
 
 </body>
