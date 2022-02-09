@@ -5,34 +5,34 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat room</title>
+    <title>Private room</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
-    
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif
         }
-    
+
         body {
             background: #ecf0f3
         }
-    
+
         #register {
             align-self: center;
         }
-    
+
         .wrapper {
-            max-width: 400px;
+            max-width: 800px;
             margin: 80px auto;
             padding: 40px 30px 30px 30px;
             background-color: #ecf0f3;
             border-radius: 15px;
             box-shadow: 13px 13px 20px #cbced1, -13px -13px 20px #fff
         }
-    
+
         .wrapper .name {
             font-weight: 600;
             font-size: 1.4rem;
@@ -40,7 +40,7 @@
             padding-left: 10px;
             color: #555
         }
-    
+
         .wrapper .form-field input {
             width: 100%;
             display: block;
@@ -51,18 +51,18 @@
             color: #666;
             padding: 10px 15px 10px 10px
         }
-    
+
         .wrapper .form-field {
             padding-left: 10px;
             margin-bottom: 20px;
             border-radius: 20px;
             box-shadow: inset 8px 8px 8px #cbced1, inset -8px -8px 8px #fff
         }
-    
+
         .wrapper .form-field .fas {
             color: #555
         }
-    
+
         .wrapper .btn {
             box-shadow: none;
             width: 100%;
@@ -73,21 +73,21 @@
             box-shadow: 3px 3px 3px #b1b1b1, -3px -3px 3px #fff;
             letter-spacing: 1.3px
         }
-    
+
         .wrapper .btn:hover {
             background-color: #039BE5
         }
-    
+
         .wrapper a {
             text-decoration: none;
             font-size: 0.8rem;
             color: #03A9F4
         }
-    
+
         .wrapper a:hover {
             color: #039BE5
         }
-    
+
         @media(max-width: 380px) {
             .wrapper {
                 margin: 30px 20px;
@@ -100,23 +100,18 @@
 <body>
     <div class="wrapper">
         <div class="mt-4 name">
-            <h1 id='roomName'></h1>
+            <h1>Private message to:</h1>
+            <h3 id='toUserName'></h3>
         </div>
         <a href="#" onclick="leaveRoom()">Left the room</a>
 
         <br />
         <div class="form-field d-flex align-items-center" id='chatRoom'>
-            <input id='roomMessage' type='text' name='roomMessage' value="" placeholder="Enter message to room" required>
-            <button class="btn mt-3"type="submit"onClick='sendMessage()'>Send message</button>
+            <input id='roomMessage' type='text' name='roomMessage' value="" placeholder="Enter message to room"
+                required>
+            <button class="btn mt-3" type="submit" onClick='sendMessage()'>Send message</button>
         </div>
         <div id="message-container"></div>
-    </div>
-
-    <div class="wrapper form-field d-flex align-items-center">
-        <div class="mt-4 name">
-            <h1>History</h1>
-        </div>
-        <p id="history"></p>
     </div>
     <script src="/socket.io/socket.io.js"></script>
 
@@ -128,83 +123,66 @@
         }
         const userName = loggedInUser.userName
         const queryString = window.location.search;
+        console.log(queryString)
         const urlParams = new URLSearchParams(queryString);
-        const roomName = urlParams.get('roomName')
-        document.getElementById('roomName').innerHTML = roomName
-
-        const client = io()
-        // Socket IO 
-        // welcome message
-        client.on('welcome', (message) => {
-            addMessage(message)
-        })
+        const toUserName = urlParams.get('toUserName')
         
-        client.emit('join', roomName, userName)  
+        document.getElementById('toUserName').innerHTML = toUserName
 
-        // message from other clients
-        client.on('newMessage', (message) => {
-            addMessage(message)
-        })
-        client.on('userJoined',(userName)=>{
-            const newRoomMessage = {
-                message: `Joined this group`,
-                userName
-            }
-            addMessage(newRoomMessage)
-        })
-        client.on('userHasLeft', (userName) => {
-                const newRoomMessage = {
-                    message: `left this group`,
-                    userName
-                }
-                addMessage(newRoomMessage)
-            })
+        // const client = io()
+        // // Socket IO 
+        // // welcome message
+        // client.on('welcome', (message) => {
+        //     addMessage(message)
+        // })
+
+        // client.emit('join', roomName, userName)
+
+        // // message from other clients
+        // client.on('newMessage', (message) => {
+        //     addMessage(message)
+        // })
+        // client.on('userJoined', (userName) => {
+        //     const newRoomMessage = {
+        //         message: `Joined this group`,
+        //         userName
+        //     }
+        //     addMessage(newRoomMessage)
+        // })
+        // client.on('userHasLeft', (userName) => {
+        //     const newRoomMessage = {
+        //         message: `left this group`,
+        //         userName
+        //     }
+        //     addMessage(newRoomMessage)
+        // })
         function leaveRoom() {
-                client.emit('left', roomName, userName)
-                window.location.href = "/chat";
-            }
+            client.emit('left', roomName, userName)
+            window.location.href = "/chat";
+        }
 
         // functions 
         // send message, to room
         function sendMessage() {
             message = document.getElementById('roomMessage').value
-            if(message.length ===0 ||message ===""|| message=== undefined)
-            {
+            if (message.length === 0 || message === "" || message === undefined) {
                 alert("Please enter the message first")
             }
-            else{
-            messageSend = {
-                room: roomName,
-                message: message,
-                userName: userName
+            else {
+                messageSend = {
+                    room: roomName,
+                    message: message,
+                    userName: userName
+                }
+                client.emit('messageToRoom', messageSend)
+                addMessage(messageSend)
             }
-            client.emit('messageToRoom', messageSend)
-            addMessage(messageSend)
-        }
         }
         // add message to display
         function addMessage(message) {
-            document.getElementById('message-container').innerHTML += `<p> ${message.userName}: ${message.message} </p>`
+            document.getElementById('message-container').innerHTML += `<li> ${message.userName}: ${message.message} </li>`
         }
-        fetch(
-                "http://localhost:3001/chatroom", {
-                method: "POST",
-                cache: 'no-cache',
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    roomName
-                })
-            }
-            )
-                .then(res => res.json())
-                .then(res => {
-                    var result = res
-                   for(let i=0;i<result.length;i++){
-                        document.getElementById("history").innerHTML +=
-                             result[i].fromUser + " :" + result[i].message + "<br>" 
-                   }
-                })
-                .catch(err => alert(err))
+
     </script>
 
 </body>

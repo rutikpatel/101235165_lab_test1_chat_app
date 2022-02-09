@@ -73,6 +73,29 @@ app.get('/chat', (req, res) => {
 app.get('/chatroom', (req, res) => {
     res.sendFile(__dirname + '/chatRoom.html')
 })
+app.post('/chatroom', async(req, res) => {
+    try {
+        const { roomName } = req.body
+        const result = await GroupMessage.find({ room: roomName})
+        res.status(200).send(result)
+    }
+    catch (e) {
+        res.status(400).send({ error: e.message });
+    }
+})
+app.get('/privateRoom', (req, res) => {
+    res.sendFile(__dirname + '/privateRoom.html')
+})
+
+app.post('/chat', async(req, res) => {
+    try {
+        const result = await User.find({}).select('userName')
+        res.status(200).send( result )
+    }
+    catch (e) {
+        res.status(400).send({ error: e.message });
+    }
+})
 
 // socket io stuff
 // client requests

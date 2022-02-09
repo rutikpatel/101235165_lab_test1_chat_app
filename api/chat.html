@@ -22,7 +22,7 @@
         }
     
         .wrapper {
-            max-width: 350px;
+            max-width: 400px;
             margin: 80px auto;
             padding: 40px 30px 30px 30px;
             background-color: #ecf0f3;
@@ -97,16 +97,15 @@
 <body>
     <div class="wrapper">
         <div class="mt-4 name"><h2>Chat-Rooms</h2></div>
-                <a href="#" onclick="logout()">Logout</a>
-            <br />
-            <label for="rooms">Choose a room:</label>
-            <select name="rooms" id="rooms">
-                <option value='news'>news</option>
-                <option value='covid19'>covid19</option>
-                <option value='nodeJS'>nodeJS</option>
-            </select>
-            <button onclick='joinRoom()'>Join Room</button>
-    
+            <a href="#" onclick="logout()">Logout</a>
+        <br />
+        <label for="rooms">Choose a room:</label>
+        <select name="rooms" id="rooms">
+            <option value='news'>news</option>
+            <option value='covid19'>covid19</option>
+            <option value='nodeJS'>nodeJS</option>
+        </select>
+        <button onclick='joinRoom()'>Join Room</button>
     </div>
     <div class="wrapper">
         <div class="mt-4 name">
@@ -114,13 +113,11 @@
         </div>
         <br />
         <label for="rooms">Choose a user:</label>
-        <select name="rooms" id="rooms">
-            <option value='news'>news</option>
-            <option value='covid19'>covid19</option>
-            <option value='nodeJS'>nodeJS</option>
+
+        <select name="userList" id="userList">
+            <option value='users' id="list">Select user</option>
         </select>
-        <button onclick='sendPrivateMsg()'>Join Room</button>
-    
+        <button onclick='sendPrivateMsg()'>Send Message</button>
     </div>
 </body>
 
@@ -135,15 +132,51 @@
     let userName = loggedInUser.userName
     const client = io()
     function joinRoom() {
-        // let roomNameH1 = document.getElementById('roomName')
         let roomNameTag = document.getElementById('rooms')
         let roomName = roomNameTag.options[roomNameTag.selectedIndex].value
         window.location.href=`http://localhost:3001/chatRoom?roomName=${roomName}`
     }
+
+    function sendPrivateMsg(){
+        let userNameTag = document.getElementById('userList')
+        let toUserName = userNameTag.options[userNameTag.selectedIndex].value
+        window.location.href = `http://localhost:3001/privateRoom?toUserName=${toUserName}`
+    }
+
     function logout() {
             localStorage.clear();
             window.location.href = "/";
         }
+    // function handleGetUsers(event) {
+        fetch(
+            "http://localhost:3001/chat", {
+            method: "POST",
+            cache: 'no-cache',
+            headers: { "Content-Type": "application/json" },
+            
+        }
+        )
+            .then(res => res.json())
+            .then(res => {
+                var userLists = [(res)]
+                // userLists.pop(userName)
+                console.log(userLists)
+                    userLists.map((element) => {
+                        for (var i = 0; i < element.length; i++) {
+                            if(element[i].userName===userName){
+                                continue
+                            }
+                            var select = document.getElementById("userList");
+                            var option = document.createElement("option");
+                            option.text = element[i].userName;
+                            option.value = element[i].userName;
+                            select.add(option);
+                        }
+                    })
+
+            })
+            .catch(err => alert(err))
+        // }
 
 </script>
 
