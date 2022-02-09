@@ -1,131 +1,19 @@
-// const express = require('express')
-// const socketio = require('socket.io')
-// const cors = require('cors')
-// const app = express()
-// const http = require('http').createServer(app)
-// const req = require('express/lib/request')
-// const res = require('express/lib/response')
-// const { Socket } = require('socket.io')
-// const PORT = 3001
-// const mongoose = require('mongoose');
-// const bodyParser = require('body-parser')
-// app.use(cors())
-// app.use(express.json())
-
-// const io = require('socket.io')(http)
-
-// const User = require('./models/user')
-// const privateMsg = require('./models/private_message')
-// const grpMsg = require('./models/group_message')
-
-
-// app.get('/',(req,res)=>{
-//     // res.send("welcome to app")
-//     res.sendFile(__dirname +'/Login.html')
-// })
-// app.get("/Register.html", (req, res) => {
-//     res.sendFile(__dirname + '/Register.html')
-// })
-// app.get("/Chat.html", (req, res) => {
-//     res.sendFile(__dirname + '/Chat.html')
-// })
-
-// app.post('/login',async(req,res)=>{
-//     if(req != null && req.body != null){
-//         const user = await User.findOne({userName:req.body.userName})
-//         if(user.password === req.body.password){
-//             localStorage.setItem("userName",user.userName)
-//             res.writeHead(301,
-//                 { Location: `http://localhost:${PORT}/chat` }
-//             );
-//             res.end();
-//         }
-//         else{
-//             res.writeHead(301,
-//             {Location :`http://localhost:${PORT}/`}
-//             );
-//             res.end();
-//         }
-//     }
-// })
-// app.post('/register', async (req, res) => {
-//     const userAuth = await User.findOne({ userName: req.body.userName})
-//     if(userAuth != null){
-//         res.json({msg:"Username already taken"})
-//         res.end();
-//     }
-//     else{
-//         const newUser = new User({
-//             userName:req.body.userName,
-//             firstName: req.body.firstName,
-//             lastName: req.body.lastName,
-//             password: req.body.password
-//         })
-//         newUser.save()  
-//         res.writeHead(301,
-//             { Location: `http://localhost:${PORT}/` }
-//         );
-//         res.end();
-//     }
-// })
-
-// io.on('connection', (socket) => {
-//     console.log('new connection has been establised..')
-
-//     const welcomeMessage = {
-//         username: 'Admin',
-//         message: 'Welcome to the chat app'
-//     }
-//     socket.emit('welcome', welcomeMessage)
-
-//     socket.on('join', (roomName) => {
-//         console.log(`user has joined ${roomName}`)
-//         socket.join(roomName)
-//     })
-
-//     socket.on('messageRoom', (data) => {
-//         const message = {
-//             userName: data.userName,
-//             message: data.message
-//         }
-//         console.log(`${data.userName} send a message to ${data.room}`)
-//         socket.broadcast.to(data.room).emit('newMessage', message)
-//     })
-
-//     // disconnect
-//     socket.on('disconnect', () => {
-//         console.log(`${socket.id} disconnected...`)
-//     })
-
-// })
-
-    
-// try {
-//     mongoose.connect(`mongodb://localhost:27017/labtest`);
-//     console.log(`Connecting to mongo...`);
-//     console.log("Connected to mongo");
-// } catch (e) {
-//     console.error(e);
-// }
-// http.listen(PORT, () => {
-//     console.log(`Server running at PORT ${PORT}`)
-// })
-
+var express = require('express');
+var bodyParser = require('body-parser')
+var mongoose = require('mongoose');
 const app = require('express')()
 const http = require('http').createServer(app)
 const cors = require('cors')
-const req = require('express/lib/request')
-const res = require('express/lib/response')
+
 const { Socket } = require('socket.io')
 const PORT = 3001
-const mongoose = require('mongoose')
-const bodyParser = require('body-parser')
-const cookieParser = require('cookie-parser')
 
 
+app.use(express.static(__dirname));
 // import models
 const User = require('./models/user.js')
 const GroupMessage = require('./models/group_message')
+const PrivateMessage = require('./models/private_message')
 
 const io = require('socket.io')(http)
 
@@ -145,19 +33,14 @@ app.post('/login', async (req, res) => {
         const { userName, password } = req.body;
         const user = await User.findOne({ userName });
         if (user === null) {
-            throw new Error("Username is not in use");
-            
+            throw new Error("This Username not associated with our record");   
         }
         if (user.password !== password) {
             throw new Error("Password is incorrect");
         }
-        res.status(200).send({
-            user
-        })
+        res.status(200).send({user})
     } catch (e) {
-        res.status(400).send({
-            error: e.message
-        })
+        res.status(400).send({error: e.message})
     }
 })
 
@@ -165,30 +48,30 @@ app.get('/register', (req, res) => {
     res.sendFile(__dirname + '/register.html')
 })
 
-app.post('/register', async (req, res) => {
-    const {userName,firstName,lastName,password} = req.body
-    const takenUsername = await User.findOne({ userName})
-    if (takenUsername) {
-        res.json({ message: 'Username already is use' })
-    } else {
-        try{
+app.post('/register', async(req, res) => {
+    try {
+        const {userName,firstName,lastName,password} = req.body
+        const takenUsername = await User.findOne({ userName})
+        if (takenUsername !== null) {
+            throw new Error('Username already is use')
+        }
         const newUser = new User({
-            userName,
-            firstName,
-            lastName,
-            password
+            userName,firstName,lastName,password
         })
-        await newUser.save();
-            res.status(200).send({ newUser })
+        const user = await newUser.save();
+        res.status(200).send( {user:user._doc} )
     }
     catch(e){
-        res.status(400).send(e.message);
+        res.status(400).send({ error: e.message });
     }
-    }
+    
 })
-
+;
 app.get('/chat', (req, res) => {
     res.sendFile(__dirname + '/chat.html')
+})
+app.get('/chatroom', (req, res) => {
+    res.sendFile(__dirname + '/chatRoom.html')
 })
 
 // socket io stuff
@@ -205,9 +88,13 @@ io.on('connection', (socket) => {
 
     // join room
     socket.on('join', (roomName,userName) => {
-        console.log(`${userName} joined ${roomName}`)
         socket.join(roomName)
+        socket.broadcast.to(roomName).emit('userJoined',userName)
     })
+    socket.on('left', (roomName, userName) => {
+        socket.broadcast.to(roomName).emit('userHasLeft', userName)
+    })
+
 
     // send message to room
     socket.on('messageToRoom', async (data) => {
@@ -215,6 +102,8 @@ io.on('connection', (socket) => {
             userName: data.userName,
             message: data.message
         }
+        socket.broadcast.to(data.room).emit('newMessage', message)
+
         console.log(`${data.userName} send a message to ${data.room}`)
         try{
         const newMsg = GroupMessage({
@@ -227,7 +116,7 @@ io.on('connection', (socket) => {
         catch(e){
             throw new Error(e.message)
         }
-        socket.broadcast.to(data.room).emit('newMessage', message)
+        // socket.broadcast.to(data.room).emit('newMessage', message)
     })
 
     // disconnect

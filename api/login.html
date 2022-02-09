@@ -98,13 +98,13 @@ color: #039BE5
         <div class="mt-4 name"> Chat-App </div>
         <br/>
         <form class="p-3 mt-3" onSubmit="handleSubmit(event)" method='POST' action='http://localhost:3001/login'>
-            <div class="form-field d-flex align-items-center"> <span class="far fa-user"></span> 
+            <div class="form-field d-flex align-items-center">
             <input type="text"
-                    name="userName" id="userName" placeholder="Username"> 
+                    name="userName" id="userName" placeholder="Username"required> 
             </div>
-            <div class="form-field d-flex align-items-center"> <span class="fas fa-key"></span> 
+            <div class="form-field d-flex align-items-center"> 
             <input type="password"
-                    name="password" id="password" placeholder="Password"> </div> 
+                    name="password" id="password" placeholder="Password" required> </div> 
             <button type="submit" class="btn mt-3">Login</button>
 
                  <a id="register"href="http://localhost:3001/register">Register</a> 
@@ -127,11 +127,18 @@ color: #039BE5
             )
             .then(res => res.json())
             .then(res => {
-                localStorage.setItem("userName", JSON.stringify(res.user.userName))
-                window.location.href = "http://localhost:3001/chat"
-                
+                if(res.user !== null&& res.user !== undefined){
+                    localStorage.setItem("user", JSON.stringify(res.user))
+                    window.location.href = "http://localhost:3001/chat"
+                }
+                else if(res.error){
+                    alert(res.error)
+                }
+                else{
+                    window.location.href = "http://localhost:3001/"
+                }
             })
-            .catch(err => console.error)
+            .catch(err => alert(err))
         }
 </script>
 

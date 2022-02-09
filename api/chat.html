@@ -3,96 +3,147 @@
 
 <head>
     <title>Lab Test 1 - Chat</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+    
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif
+        }
+    
+        body {
+            background: #ecf0f3
+        }
+    
+        #register {
+            align-self: center;
+        }
+    
+        .wrapper {
+            max-width: 350px;
+            margin: 80px auto;
+            padding: 40px 30px 30px 30px;
+            background-color: #ecf0f3;
+            border-radius: 15px;
+            box-shadow: 13px 13px 20px #cbced1, -13px -13px 20px #fff
+        }
+    
+        .wrapper .name {
+            font-weight: 600;
+            font-size: 1.4rem;
+            letter-spacing: 1.3px;
+            padding-left: 10px;
+            color: #555
+        }
+    
+        .wrapper .form-field input {
+            width: 100%;
+            display: block;
+            border: none;
+            outline: none;
+            background: none;
+            font-size: 1.2rem;
+            color: #666;
+            padding: 10px 15px 10px 10px
+        }
+    
+        .wrapper .form-field {
+            padding-left: 10px;
+            margin-bottom: 20px;
+            border-radius: 20px;
+            box-shadow: inset 8px 8px 8px #cbced1, inset -8px -8px 8px #fff
+        }
+    
+        .wrapper .form-field .fas {
+            color: #555
+        }
+    
+        .wrapper .btn {
+            box-shadow: none;
+            width: 100%;
+            height: 40px;
+            background-color: #03A9F4;
+            color: #fff;
+            border-radius: 25px;
+            box-shadow: 3px 3px 3px #b1b1b1, -3px -3px 3px #fff;
+            letter-spacing: 1.3px
+        }
+    
+        .wrapper .btn:hover {
+            background-color: #039BE5
+        }
+    
+        .wrapper a {
+            text-decoration: none;
+            font-size: 0.8rem;
+            color: #03A9F4
+        }
+    
+        .wrapper a:hover {
+            color: #039BE5
+        }
+    
+        @media(max-width: 380px) {
+            .wrapper {
+                margin: 30px 20px;
+                padding: 40px 15px 15px 15px
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Chat</h1>
-    <div id='error-container'></div>
-    <br />
-
-    <label for="rooms">Choose a room:</label>
-    <select name="rooms" id="rooms">
-        <option value='news'>news</option>
-        <option value='covid19'>covid19</option>
-        <option value='nodeJS'>nodeJS</option>
-    </select>
-    <button onclick='joinRoom()'>Join Room</button>
-
-    <h1 id='roomName'></h1>
-    <br />
-        <div id='chatRoom'>
-        <input id='roomMessage' type='text' name='roomMessage' value="" placeholder="Enter message to room">
-        <button onClick='sendMessage()'>Send message</button>
-        </div> 
-    <div id="message-container"></div>
+    <div class="wrapper">
+        <div class="mt-4 name"><h2>Chat-Rooms</h2></div>
+                <a href="#" onclick="logout()">Logout</a>
+            <br />
+            <label for="rooms">Choose a room:</label>
+            <select name="rooms" id="rooms">
+                <option value='news'>news</option>
+                <option value='covid19'>covid19</option>
+                <option value='nodeJS'>nodeJS</option>
+            </select>
+            <button onclick='joinRoom()'>Join Room</button>
+    
+    </div>
+    <div class="wrapper">
+        <div class="mt-4 name">
+            <h2>Private message</h2>
+        </div>
+        <br />
+        <label for="rooms">Choose a user:</label>
+        <select name="rooms" id="rooms">
+            <option value='news'>news</option>
+            <option value='covid19'>covid19</option>
+            <option value='nodeJS'>nodeJS</option>
+        </select>
+        <button onclick='sendPrivateMsg()'>Join Room</button>
+    
+    </div>
 </body>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    // handle cookies
-    userName = localStorage.getItem('userName')
-    if (userName == '') {
+
+    const loggedInUser = JSON.parse(localStorage.getItem('user'))
+    if (loggedInUser === ''|| loggedInUser === null) {
         console.log('user not logged in')
-        window.location.replace("http://localhost:3001/")
+        window.location.href ="http://localhost:3001/"
     }
-
+    let userName = loggedInUser.userName
     const client = io()
-    // Socket IO 
-    // welcome message
-    client.on('welcome', (message) => {
-        addMessage(message)
-    })
-
-    // message from other clients
-    client.on('newMessage', (message) => {
-        addMessage(message)
-    })
-
-    // functions 
-    // send message, to room
-    function sendMessage() {
-        message = document.getElementById('roomMessage').value
-        var roomName = document.getElementById('roomName').innerHTML
-        userName = localStorage.getItem('userName')
-        messageSend = {
-            room: roomName,
-            message: message,
-            userName: userName
-        }
-        client.emit('messageToRoom', messageSend)
-        addMessage(messageSend)
-    }
-
-    // add message to display
-    function addMessage(message) {
-        document.getElementById('message-container').innerHTML += `<div> ${message.userName}: ${message.message} </div>`
-    }
-
     function joinRoom() {
-            x.style.display = "none";
-            let roomNameH1 = document.getElementById('roomName')
-            let roomNameTag = document.getElementById('rooms')
-            let roomName = roomNameTag.options[roomNameTag.selectedIndex].value
-            roomNameH1.innerHTML = roomName
-            userName = localStorage.getItem('userName')
-            client.emit('join', roomName, userName)   
+        // let roomNameH1 = document.getElementById('roomName')
+        let roomNameTag = document.getElementById('rooms')
+        let roomName = roomNameTag.options[roomNameTag.selectedIndex].value
+        window.location.href=`http://localhost:3001/chatRoom?roomName=${roomName}`
     }
-
-    function getCookie(cname) {
-        let name = cname + "=";
-        let decodedCookie = decodeURIComponent(document.cookie);
-        let ca = decodedCookie.split(';');
-        for (let i = 0; i < ca.length; i++) {
-            let c = ca[i];
-            while (c.charAt(0) == ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) == 0) {
-                return c.substring(name.length, c.length);
-            }
+    function logout() {
+            localStorage.clear();
+            window.location.href = "/";
         }
-        return "";
-    }
 
 </script>
 

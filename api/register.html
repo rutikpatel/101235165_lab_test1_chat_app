@@ -96,32 +96,28 @@
 
 <body>
     <div class="wrapper">
-        <div class="mt-4 name"> Registeration </div>
+        <div class="mt-4 name"> Registration </div>
         <br />
 
-    <form class="p-3 mt-3"method='POST' action='http://localhost:3001/register'>
+    <form onSubmit="handleSubmit(event)" class="p-3 mt-3"method='POST' action='http://localhost:3001/register'>
         <div class="form-field d-flex align-items-center"> 
-            <span class="far fa-user"></span>
-            <input type="text" name="userName" id="userName" placeholder="Username">
+            <input type="text" name="userName" id="userName" placeholder="Username"required>
         </div>
         <div class="form-field d-flex align-items-center"> 
-            <span class="far fa-user"></span>
-            <input type="text" name="firstName" id="firstName" placeholder="firstName">
+            <input type="text" name="firstName" id="firstName" placeholder="firstName"required>
         </div>
         <div class="form-field d-flex align-items-center"> 
-            <span class="far fa-user"></span>
-            <input type="text" name="lastName" id="lastName" placeholder="lastName">
+            <input type="text" name="lastName" id="lastName" placeholder="lastName" required>
         </div>
         <div class="form-field d-flex align-items-center"> 
-            <span class="far fa-user"></span>
-            <input type="password" name="password" id="password" placeholder="password">
+            <input type="password" name="password" id="password" placeholder="password" required>
         </div>
         <Button  class="btn mt-3"type='submit'>Register</Button>
     </form>
 </div>  
     <script>
-        function handleSubmit(e) {
-                e.preventDefault();
+        function handleSubmit(event) {
+                event.preventDefault();
                 const userName = document.getElementById('userName').value;
                 const firstName = document.getElementById('firstName').value;
                 const lastName = document.getElementById('lastName').value;
@@ -132,20 +128,21 @@
                     cache: 'no-cache',
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({
-                        userName,
-                        firstName,
-                        lastName,
-                        password
+                        userName,firstName,lastName,password
                     })
                 }
                 )
                 .then(res => res.json())
                 .then(res => {
-                    localStorage.setItem("userName", JSON.stringify(res.user.userName))
-                    window.location.href = "http://localhost:3001/login"
-
+                    if (res.error) {
+                        alert(res.error)
+                    }
+                    if(res.user !== null && res.user !== undefined) {
+                        localStorage.setItem("user", JSON.stringify(res.user))
+                        window.location.href = "http://localhost:3001/chat"
+                    }
                 })
-                .catch(err => console.error)
+                .catch(err => alert(err),console.log("here"))
                 }
     </script>
 
